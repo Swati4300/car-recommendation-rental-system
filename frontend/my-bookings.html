@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings | The Mob Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .booking-card {
+            display: grid;
+            grid-template-columns: 180px 1fr 200px;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding: 20px;
+            align-items: center;
+        }
+        .booking-img img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        .booking-details h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .booking-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .booking-info-grid span b {
+            color: var(--text-main);
+        }
+        .status-section {
+            text-align: right;
+            padding-right: 20px;
+        }
+        .status-text {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .status-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status-Approved { color: var(--secondary-color); }
+        .status-Confirmed { color: #00ff88; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+        .status-Pending { color: #ffd700; }
+        .status-Rejected { color: var(--accent-color); }
+
+        .payment-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .pay-paid { background: rgba(0, 255, 136, 0.15); color: #00ff88; }
+        .pay-pending { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
+
+        #payment-modal .modal-content {
+            max-width: 450px;
+            text-align: center;
+        }
+        .payment-option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .pay-opt {
+            padding: 20px;
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .pay-opt:hover, .pay-opt.active {
+            border-color: var(--primary-color);
+            background: rgba(108, 99, 255, 0.1);
+        }
+        .pay-opt i { font-size: 1.5rem; margin-bottom: 10px; color: var(--primary-color); }
+
+        @media (max-width: 768px) {
+            .booking-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .status-section {
+                text-align: center;
+                padding-right: 0;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Navbar -->
+    <nav class="navbar glass">
+        <div class="container">
+            <a href="index.html" class="logo">The Mob<span> Hub</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="recommendations.html">Recommendations</a></li>
+                <li><a href="explore.html">Explore</a></li>
+                <li><a href="comparison.html">Comparison</a></li>
+                <li><a href="rentals.html">Rentals</a></li>
+                <li><a href="my-bookings.html" class="active">My Bookings</a></li>
+                <li><a href="about.html">About Us</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button id="login-btn" class="btn btn-text">Login</button>
+                <button id="signup-btn" class="btn btn-primary">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section-padding">
+        <!-- User Profile Summary -->
+        <div class="user-profile-header glass" style="display: flex; align-items: center; gap: 30px; padding: 30px; border-radius: 20px; margin-bottom: 50px; background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(0, 191, 166, 0.05)); border: 1px solid var(--surface-border);">
+            <div class="profile-avatar" style="width: 80px; height: 80px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; font-weight: 700; box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);">
+                <span id="user-initial">U</span>
+            </div>
+            <div style="flex: 1;">
+                <h2 id="user-display-name" style="margin: 0; color: white;">User Name</h2>
+                <p id="user-display-email" style="color: var(--text-muted); margin-top: 5px;">user@example.com</p>
+                <div style="display: flex; gap: 20px; margin-top: 15px;">
+                    <span style="font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--surface-border);"><i class="fa-solid fa-shield-halved" style="color: var(--secondary-color);"></i> Verified Member</span>
+                    <span id="inbox-count-badge" style="font-size: 0.8rem; background: rgba(108, 99, 255, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--primary-color); color: var(--primary-color);"><i class="fa-solid fa-comment"></i> 0 New Replies</span>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <a href="inbox.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-inbox"></i> Go to Inbox</a>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <span class="module-label">Your Journey</span>
+            <h2>My Rental Bookings</h2>
+            <p>Track the status of your car rental requests and history.</p>
+        </div>
+
+        <div id="user-booking-list">
+            <div style="text-align: center; padding: 50px;">
+                <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <p>Fetching your bookings...</p>
+            </div>
+        </div>
+
+        <div id="login-required" style="display: none; text-align: center; padding: 100px 0;">
+            <i class="fa-solid fa-lock" style="font-size: 4rem; color: var(--surface-border); margin-bottom: 20px;"></i>
+            <h3>Login Required</h3>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Please login to view your booking history and status.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('login-modal').style.display='flex'">Login Now</button>
+        </div>
+    </main>
+
+    <!-- Message Detail Modal -->
+    <div id="msg-detail-modal" class="modal">
+        <div class="modal-content glass" style="max-width: 600px;">
+            <span class="close-modal" onclick="closeMsgModal()">&times;</span>
+            <h2 style="color: var(--primary-color);">Message Details</h2>
+            <div id="msg-modal-content" style="margin-top: 20px;">
+                <!-- Content injected via JS -->
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top: 25px;" onclick="closeMsgModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-modal" onclick="document.getElementById('payment-modal').style.display='none'">&times;</span>
+            <h2 style="color: var(--primary-color);">Complete Payment</h2>
+            <p style="margin-top: 10px; color: var(--text-muted);">Secure checkout for your booking</p>
+            
+            <div style="background: var(--surface-color); padding: 20px; border-radius: 12px; margin-top: 25px;">
+                <p style="font-size: 0.9rem;">Total Payable Amount</p>
+                <h1 id="pay-amount" style="margin-top: 5px;">₹0</h1>
+            </div>
+
+            <div class="payment-option-grid">
+                <div class="pay-opt active"><i class="fa-solid fa-qrcode"></i><p>UPI / GPay</p></div>
+                <div class="pay-opt"><i class="fa-solid fa-credit-card"></i><p>Card</p></div>
+                <div class="pay-opt"><i class="fa-solid fa-building-columns"></i><p>Net Banking</p></div>
+                <div class="pay-opt"><i class="fa-solid fa-wallet"></i><p>Wallet</p></div>
+            </div>
+
+            <button id="confirm-pay-btn" class="btn btn-primary btn-block btn-lg">Pay Now</button>
+            <div id="pay-loader" style="display:none; margin-top: 20px;">
+                <div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--secondary-color); border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="font-size: 0.8rem; margin-top: 10px;">Processing secure transaction...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; bottom: 30px; left: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+    <!-- Modals -->
+    <div id="login-modal" class="modal">
+
+        <div class="modal-content glass">
+            <span class="close-modal">&times;</span>
+            <h2>Welcome Back</h2>
+            <form id="login-form">
+                <div class="form-group"><label>Email</label><input type="email" placeholder="Enter your email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" placeholder="Enter your password" required></div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer glass">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">The Mob<span> Hub</span></a>
+                <p>Empowering your automotive decisions with intelligent insights and AI-driven recommendations.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="recommendations.html">Recommendations</a></li>
+                    <li><a href="explore.html">Explore</a></li>
+                    <li><a href="comparison.html">Comparison</a></li>
+                    <li><a href="rentals.html">Rentals</a></li>
+                    <li><a href="my-bookings.html">My Bookings</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h4>Contact Us</h4>
+                <p><i class="fa-solid fa-envelope"></i> contact@themobhub.com</p>
+                <p><i class="fa-solid fa-phone"></i> +1 (555) 123-4567</p>
+                <p><i class="fa-solid fa-location-dot"></i> Silicon Valley, CA</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2026 The Mob Hub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/api.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const list = document.getElementById('user-booking-list');
+            const loginReq = document.getElementById('login-required');
+            const payModal = document.getElementById('payment-modal');
+
+            if (!user) {
+                list.style.display = 'none';
+                loginReq.style.display = 'block';
+                document.querySelector('.user-profile-header').style.display = 'none';
+                return;
+            }
+
+            // --- POPULATE PROFILE HEADER ---
+            document.getElementById('user-display-name').innerText = user.name;
+            document.getElementById('user-display-email').innerText = user.email;
+            document.getElementById('user-initial').innerText = user.name.charAt(0).toUpperCase();
+
+            let activePayBookingId = null;
+
+            async function fetchUserBookings() {
+                try {
+                    const encodedName = encodeURIComponent(user.name);
+                    const res = await fetch(`http://127.0.0.1:5000/api/user-bookings/${encodedName}`);
+                    
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        throw new Error(errorData.error || `Server error: ${res.status}`);
+                    }
+
+                    const bookings = await res.json();
+                    console.log("My Bookings Data:", bookings);
+                    
+                    if (!bookings || bookings.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:50px;"><i class="fa-solid fa-calendar-xmark" style="font-size:3rem; color:var(--surface-border); margin-bottom:20px;"></i><h3>No bookings yet</h3><p style="color:var(--text-muted);">Go to the Rentals page to start your journey!</p></div>';
+                        return;
+                    }
+
+                    list.innerHTML = bookings.map(b => {
+                        const statusIcons = {
+                            'Confirmed': 'fa-circle-check',
+                            'Approved': 'fa-circle-check',
+                            'Pending': 'fa-hourglass-half',
+                            'Rejected': 'fa-circle-xmark'
+                        };
+                        const statusMessages = {
+                            'Confirmed': 'Booking Confirmed! Enjoy your ride.',
+                            'Approved': 'Ready for payment.',
+                            'Pending': 'Waiting for admin approval...',
+                            'Rejected': 'Unfortunately, your request was rejected.'
+                        };
+
+                        const needsPayment = b.status === 'Approved' && b.payment_status === 'Pending';
+
+                        return `
+                            <div class="booking-card glass">
+                                <div class="booking-img">
+                                    <img src="${b.image_url_front || 'https://via.placeholder.com/300x120'}" alt="${b.brand}">
+                                </div>
+                                <div class="booking-details">
+                                    <h3>${b.brand} ${b.model}</h3>
+                                    <div class="booking-info-grid">
+                                        <span><i class="fa-solid fa-calendar-day"></i> Pickup: <b>${b.pickup_date} at ${b.pickup_time}</b></span>
+                                        <span><i class="fa-solid fa-calendar-check"></i> Return: <b>${b.return_date} at ${b.return_time}</b></span>
+                                        <span><i class="fa-solid fa-location-dot"></i> Location: <b>${b.location}</b></span>
+                                        <span><i class="fa-solid fa-tag"></i> Total: <b>₹${(b.total_amount || 0).toLocaleString()}</b></span>
+                                    </div>
+                                    <span class="payment-badge pay-${(b.payment_status || 'Pending').toLowerCase()}">${b.payment_status === 'Paid' ? '✓ Paid' : '💳 Payment Pending'}</span>
+                                </div>
+                                <div class="status-section">
+                                    <span class="status-text status-${b.status}">
+                                        <i class="fa-solid ${statusIcons[b.status] || 'fa-question'}"></i> ${b.status}
+                                    </span>
+                                    <p class="status-note" style="margin-bottom: 15px;">${statusMessages[b.status] || ''}</p>
+                                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                        ${needsPayment ? `<button class="btn btn-secondary btn-sm" onclick="openPayment(${b.id}, ${b.total_amount})">Pay Now</button>` : ''}
+                                        <button class="btn btn-text btn-sm" style="color: var(--accent-color);" onclick="deleteBooking(${b.id})"><i class="fa-solid fa-trash"></i> Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (err) {
+                    console.error("Booking Load Error:", err);
+                    list.innerHTML = `<p style="color:red; text-align:center;">Failed to load bookings.<br><small>${err.message}</small></p>`;
+                }
+            }
+
+            window.showToast = (message, type = 'success') => {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px; background:var(--surface-color); padding:15px 20px; border-radius:12px; border:1px solid var(--surface-border); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}"></i>
+                        <span style="font-size:0.9rem; font-weight:500;">${message}</span>
+                    </div>
+                `;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.animation = 'toastFadeOut 0.3s forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            };
+
+            window.deleteBooking = async (id) => {
+                if (!confirm("Are you sure you want to cancel this booking?")) return;
+                try {
+                    const res = await fetch(`http://127.0.0.1:5000/api/delete-booking/${id}`, { method: 'DELETE' });
+                    const result = await res.json();
+                    if (res.ok) {
+                        showToast(result.message, "success");
+                        fetchUserBookings();
+                    } else {
+                        showToast("Error: " + result.error, "error");
+                    }
+                } catch (err) {
+                    showToast("Action failed. Check your connection.", "error");
+                }
+            };
+
+            window.openPayment = (bookingId, amount) => {
+                activePayBookingId = bookingId;
+                document.getElementById('pay-amount').innerText = `₹${amount.toLocaleString()}`;
+                payModal.style.display = 'flex';
+            };
+
+            document.getElementById('confirm-pay-btn').onclick = async () => {
+                const btn = document.getElementById('confirm-pay-btn');
+                const loader = document.getElementById('pay-loader');
+                
+                btn.style.display = 'none';
+                loader.style.display = 'block';
+
+                try {
+                    // 1. Create Razorpay Order
+                    const resOrder = await fetch(`http://127.0.0.1:5000/api/create-payment`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ booking_id: activePayBookingId })
+                    });
+                    const orderData = await resOrder.json();
+
+                    if (!resOrder.ok) throw new Error(orderData.error);
+
+                    // 2. Initialize Razorpay Checkout
+                    const options = {
+                        "key": orderData.key_id,
+                        "amount": orderData.amount * 100, // Amount in paise
+                        "currency": orderData.currency,
+                        "name": "The Mob Hub",
+                        "description": "Car Rental Payment",
+                        "order_id": orderData.razorpay_order_id,
+                        "handler": async function (response){
+                            // 3. Verify Payment
+                            try {
+                                const resVerify = await fetch(`http://127.0.0.1:5000/api/verify-payment`, {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({
+                                        booking_id: activePayBookingId,
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature
+                                    })
+                                });
+                                const verifyResult = await resVerify.json();
+                                
+                                loader.style.display = 'none';
+                                btn.style.display = 'block';
+                                
+                                if (resVerify.ok) {
+                                    showToast("Payment successful! Your booking is confirmed.", "success");
+                                    payModal.style.display = 'none';
+                                    fetchUserBookings();
+                                } else {
+                                    showToast("Payment verification failed: " + verifyResult.error, "error");
+                                }
+                            } catch (err) {
+                                showToast("Verification error: " + err.message, "error");
+                                loader.style.display = 'none';
+                                btn.style.display = 'block';
+                            }
+                        },
+                        "prefill": {
+                            "name": user.name,
+                            "email": user.email
+                        },
+                        "theme": {
+                            "color": "#6C63FF"
+                        },
+                        "modal": {
+                            "ondismiss": function(){
+                                loader.style.display = 'none';
+                                btn.style.display = 'block';
+                            }
+                        }
+                    };
+                    
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function (response){
+                        showToast("Payment Failed: " + response.error.description, "error");
+                        loader.style.display = 'none';
+                        btn.style.display = 'block';
+                    });
+                    rzp.open();
+
+                } catch (err) {
+                    showToast("Error: " + err.message, "error");
+                    loader.style.display = 'none';
+                    btn.style.display = 'block';
+                }
+            };
+
+            fetchUserBookings();
+            setInterval(fetchUserBookings, 30000);
+        });
+    </script>
+</body>
+</html>

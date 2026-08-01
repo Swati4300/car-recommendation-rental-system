@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox | The Mob Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .booking-card {
+            display: grid;
+            grid-template-columns: 1fr 150px;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding: 25px;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .booking-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.1);
+        }
+        .message-content-preview {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 80%;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pay-paid { background: rgba(0, 191, 166, 0.15); color: var(--secondary-color); border: 1px solid var(--secondary-color); }
+        .pay-pending { background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; }
+        
+        @media (max-width: 600px) {
+            .booking-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .message-content-preview { max-width: 100%; }
+            .status-side { text-align: center !important; margin-top: 15px; }
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Navbar -->
+    <nav class="navbar glass">
+        <div class="container">
+            <a href="index.html" class="logo">The Mob<span> Hub</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="recommendations.html">Recommendations</a></li>
+                <li><a href="explore.html">Explore</a></li>
+                <li><a href="comparison.html">Comparison</a></li>
+                <li><a href="rentals.html">Rentals</a></li>
+                <li><a href="my-bookings.html">My Bookings</a></li>
+                <li><a href="about.html">About Us</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button id="login-btn" class="btn btn-text">Login</button>
+                <button id="signup-btn" class="btn btn-primary">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container section-padding">
+        <div class="section-header">
+            <span class="module-label">Communication Center</span>
+            <h2>Your Inbox</h2>
+            <p>Direct responses and updates from our support and admin team.</p>
+        </div>
+
+        <div id="user-message-list">
+            <div style="text-align: center; padding: 50px;">
+                <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <p>Loading your messages...</p>
+            </div>
+        </div>
+
+        <div id="login-required" style="display: none; text-align: center; padding: 100px 0;">
+            <i class="fa-solid fa-lock" style="font-size: 4rem; color: var(--surface-border); margin-bottom: 20px;"></i>
+            <h3>Access Denied</h3>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Please login to access your private inbox.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('login-modal').style.display='flex'">Login Now</button>
+        </div>
+    </main>
+
+    <!-- Message Detail Modal -->
+    <div id="msg-detail-modal" class="modal">
+        <div class="modal-content glass" style="max-width: 700px;">
+            <span class="close-modal" onclick="closeMsgModal()">&times;</span>
+            <h2 style="color: var(--primary-color); border-bottom: 1px solid var(--surface-border); padding-bottom: 15px;">Message Details</h2>
+            <div id="msg-modal-content" style="margin-top: 25px;">
+                <!-- Content injected via JS -->
+            </div>
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="btn btn-primary" onclick="closeMsgModal()">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-modal" onclick="document.getElementById('login-modal').style.display='none'">&times;</span>
+            <h2>Welcome Back</h2>
+            <form id="login-form">
+                <div class="form-group"><label>Email</label><input type="email" placeholder="Enter your email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" placeholder="Enter your password" required></div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer glass">
+        <div class="container footer-bottom">
+            <p>&copy; 2026 The Mob Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const list = document.getElementById('user-message-list');
+            const loginReq = document.getElementById('login-required');
+
+            if (!user) {
+                list.style.display = 'none';
+                loginReq.style.display = 'block';
+                return;
+            }
+
+            async function fetchUserMessages() {
+                try {
+                    const encodedName = encodeURIComponent(user.name);
+                    const res = await fetch(`http://127.0.0.1:5000/api/user-messages/${encodedName}`);
+                    const messages = await res.json();
+
+                    if (!messages || messages.length === 0) {
+                        list.innerHTML = `
+                            <div style="text-align:center; padding:80px 20px;">
+                                <i class="fa-solid fa-envelope-open" style="font-size:4rem; color:var(--surface-border); margin-bottom:20px;"></i>
+                                <h3>Your inbox is empty</h3>
+                                <p style="color:var(--text-muted); margin-top:10px;">When you ask a query about a car, the responses will appear here.</p>
+                                <a href="explore.html" class="btn btn-primary" style="margin-top:25px; text-decoration:none; display:inline-block;">Explore Cars</a>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    list.innerHTML = messages.map(m => `
+                        <div class="booking-card glass" onclick='viewMessageDetail(${JSON.stringify(m).replace(/'/g, "&apos;")})'>
+                            <div>
+                                <h4 style="color:#fff; font-size:1.2rem; margin-bottom:5px;">${m.subject}</h4>
+                                <div style="display:flex; gap:15px; align-items:center; margin-bottom:10px;">
+                                    <span style="font-size:0.8rem; color:var(--primary-color); background:rgba(108, 99, 255, 0.1); padding:2px 8px; border-radius:4px;">
+                                        <i class="fa-solid fa-car"></i> ${m.brand ? `${m.brand} ${m.model}` : 'General Inquiry'}
+                                    </span>
+                                    <span style="font-size:0.75rem; color:var(--text-muted);">
+                                        <i class="fa-solid fa-calendar"></i> ${new Date(m.created_at).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <div class="message-content-preview">${m.message}</div>
+                            </div>
+                            <div class="status-side" style="text-align:right;">
+                                <span class="status-badge ${m.status === 'Replied' ? 'pay-paid' : 'pay-pending'}">
+                                    ${m.status === 'Replied' ? '✓ Replied' : '• New'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (err) { 
+                    list.innerHTML = '<p style="color:red; text-align:center;">Failed to connect to communication server.</p>';
+                }
+            }
+
+            window.viewMessageDetail = (m) => {
+                const content = `
+                    <div style="margin-bottom:25px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                            <div>
+                                <p style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Your Question</p>
+                                <h3 style="color:#fff; margin-top:5px;">${m.subject}</h3>
+                            </div>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">${new Date(m.created_at).toLocaleString()}</span>
+                        </div>
+                        <div style="line-height:1.7; color:var(--text-main); background:rgba(255,255,255,0.03); padding:20px; border-radius:12px; border:1px solid var(--surface-border);">
+                            ${m.message}
+                        </div>
+                    </div>
+                    
+                    ${m.reply_text ? `
+                        <div style="margin-top:35px; border-top: 1px solid var(--surface-border); padding-top:25px; animation: fadeIn 0.5s ease;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                                <p style="font-size:0.75rem; color:var(--secondary-color); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Admin Response</p>
+                                <span style="font-size:0.75rem; color:var(--text-muted);">${new Date(m.replied_at).toLocaleString()}</span>
+                            </div>
+                            <div style="line-height:1.7; color:#fff; background:rgba(0, 191, 166, 0.05); border-left: 4px solid var(--secondary-color); padding:20px; border-radius:12px; box-shadow: 0 5px 15px rgba(0, 191, 166, 0.05);">
+                                ${m.reply_text}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="margin-top:30px; text-align:center; padding:20px; background:rgba(255, 215, 0, 0.05); border-radius:12px; border:1px dashed #ffd700;">
+                            <p style="font-size:0.9rem; color:#ffd700;"><i class="fa-solid fa-clock-rotate-left"></i> Our team is reviewing your query. We'll get back to you soon.</p>
+                        </div>
+                    `}
+                `;
+                document.getElementById('msg-modal-content').innerHTML = content;
+                document.getElementById('msg-detail-modal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeMsgModal = () => {
+                document.getElementById('msg-detail-modal').style.display = 'none';
+                document.body.style.overflow = '';
+            };
+
+            fetchUserMessages();
+            setInterval(fetchUserMessages, 30000);
+        });
+    </script>
+</body>
+</html>
