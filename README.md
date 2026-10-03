@@ -28,9 +28,6 @@ A full-stack web app where users can discover cars, compare them, save favourite
 ![Home]
 <img width="1920" height="914" alt="image" src="https://github.com/user-attachments/assets/63473e10-5cda-4154-a6ef-d60c3e4bb9b6" />
 
-![Comparison](screenshots/comparison.png)
-![Admin Dashboard](screenshots/admin.png)
-
 ## Setup
 1. Clone the repo:
    `git clone https://github.com/Swati4300/car-recommendation-rental-system.git`
