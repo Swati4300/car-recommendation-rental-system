@@ -136,7 +136,10 @@ CREATE TABLE IF NOT EXISTS `search_history` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed Initial Data
+-- ========================================================
+-- Seed Initial Rental Fleet Data
+-- ========================================================
+
 INSERT INTO `cars` (`brand`, `model`, `price`, `price_per_day`, `body_type`, `fuel_type`, `location`, `mileage`, `engine`, `power`, `transmission`, `safety_rating`, `description`, `pros`, `cons`, `image_url_front`) VALUES
 ('Lamborghini', 'Huracan', 35000000, 85000, 'Sport', 'Petrol', 'Mumbai', '12 kmpl', '5.2L V10', 610, 'Automatic', 5, 'V10 Supercar', 'Extreme Speed, Sound, Style', 'High maintenance, Low ground clearance', 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?auto=format&fit=crop&w=800&q=80'),
 ('Tesla', 'Model X', 12000000, 25000, 'SUV', 'Electric', 'Delhi', '450 km', 'Dual Electric', 670, 'Automatic', 5, 'Falcon Wings', 'Insane Acceleration, Tech, Space', 'Pricey, Falcon doors need space', 'https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&w=800&q=80'),

@@ -1,6 +1,6 @@
-flask
-flask-cors
-mysql-connector-python
-werkzeug
-razorpay
-python-dotenv
+Flask>=3.0.0
+flask-cors>=6.0.0
+mysql-connector-python>=9.0.0
+Werkzeug>=3.0.0
+razorpay>=2.0.0
+python-dotenv>=1.0.0

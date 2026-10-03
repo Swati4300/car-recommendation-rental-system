@@ -7,16 +7,17 @@ import json
 import os
 from datetime import datetime, date
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     import razorpay
-    from dotenv import load_dotenv
-    load_dotenv()
     RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', 'rzp_test_YourTestKeyIdHere')
     RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', 'YourTestKeySecretHere')
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 except ImportError:
-    print("WARNING: 'razorpay' or 'python-dotenv' package is missing. Payments will not work. Run: pip install razorpay python-dotenv")
+    print("WARNING: 'razorpay' package is missing. Payments will not work. Run: pip install razorpay")
     razorpay_client = None
     RAZORPAY_KEY_ID = None
 
@@ -32,10 +33,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- DATABASE CONFIGURATION ---
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Demir$28selin#',
-    'database': 'car_recommendation'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'car_recommendation')
 }
 
 def get_db_connection():
