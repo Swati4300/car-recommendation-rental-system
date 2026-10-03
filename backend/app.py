@@ -8,6 +8,8 @@ import os
 from datetime import datetime, date
 import uuid
 from dotenv import load_dotenv
+from lock_utils import DistributedLock
+from geohash_utils import encode_geohash, get_city_geohash, calculate_haversine_distance
 
 load_dotenv()
 
@@ -339,61 +341,75 @@ def rent():
             data = request.form
             files = request.files
 
-        conn = get_db_connection(); cursor = conn.cursor(dictionary=True)
-        
-        # Availability Check
-        cursor.execute("SELECT available_from, available_until FROM cars WHERE id = %s", (data['car_id'],))
-        car = cursor.fetchone()
-        if car and car['available_from'] and car['available_until']:
-            req_pickup = datetime.strptime(data['pickup_date'], '%Y-%m-%d').date()
-            req_return = datetime.strptime(data['return_date'], '%Y-%m-%d').date()
-            if req_pickup < car['available_from'] or req_return > car['available_until']:
+        car_id = data.get('car_id')
+        if not car_id:
+            return jsonify({"error": "Car ID is required"}), 400
+
+        # Acquire Distributed Lock on Car ID (Redis SETNX with In-Memory fallback)
+        lock = DistributedLock(f"car:{car_id}", expire_seconds=10)
+        if not lock.acquire(blocking=True, timeout=5):
+            return jsonify({"error": "Vehicle is currently processing another booking request. Please try again."}), 409
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            # Availability Check
+            cursor.execute("SELECT available_from, available_until FROM cars WHERE id = %s FOR UPDATE", (car_id,))
+            car = cursor.fetchone()
+            if car and car['available_from'] and car['available_until']:
+                req_pickup = datetime.strptime(data['pickup_date'], '%Y-%m-%d').date()
+                req_return = datetime.strptime(data['return_date'], '%Y-%m-%d').date()
+                if req_pickup < car['available_from'] or req_return > car['available_until']:
+                    cursor.close(); conn.close()
+                    return jsonify({"error": f"Vehicle is only available from {car['available_from']} to {car['available_until']}"}), 400
+
+            # Atomic Overlap Check
+            cursor.execute("""
+                SELECT id FROM bookings 
+                WHERE car_id = %s 
+                AND status != 'Rejected'
+                AND (%s <= return_date) AND (%s >= pickup_date)
+                FOR UPDATE
+            """, (car_id, data['pickup_date'], data['return_date']))
+            
+            if cursor.fetchone():
                 cursor.close(); conn.close()
-                return jsonify({"error": f"Vehicle is only available from {car['available_from']} to {car['available_until']}"}), 400
+                return jsonify({"error": "This vehicle is already booked for the selected dates."}), 400
 
-        # Overlap Check
-        cursor.execute("""
-            SELECT id FROM bookings 
-            WHERE car_id = %s 
-            AND status != 'Rejected'
-            AND (%s <= return_date) AND (%s >= pickup_date)
-        """, (data['car_id'], data['pickup_date'], data['return_date']))
-        
-        if cursor.fetchone():
-            cursor.close(); conn.close()
-            return jsonify({"error": "This vehicle is already booked for the selected dates."}), 400
+            # Handle File Uploads
+            license_filename = None
+            id_proof_filename = None
 
-        # Handle File Uploads
-        license_filename = None
-        id_proof_filename = None
+            if 'license' in files:
+                file = files['license']
+                if file.filename != '':
+                    license_filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], license_filename))
+            
+            if 'id_proof' in files:
+                file = files['id_proof']
+                if file.filename != '':
+                    id_proof_filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], id_proof_filename))
 
-        if 'license' in files:
-            file = files['license']
-            if file.filename != '':
-                license_filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], license_filename))
-        
-        if 'id_proof' in files:
-            file = files['id_proof']
-            if file.filename != '':
-                id_proof_filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], id_proof_filename))
-
-        # Insert Booking
-        cursor.execute("""
-            INSERT INTO bookings (
-                user_name, car_id, pickup_date, pickup_time, return_date, return_time, 
-                location, payment_method, license_path, id_proof_path, driver_option, coupon_code, driver_id
-            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (
-            data['user_name'], data['car_id'], data['pickup_date'], data.get('pickup_time', '09:00:00'),
-            data['return_date'], data.get('return_time', '18:00:00'), data['location'], 
-            data.get('payment_method', 'Pay at Pickup'), license_filename, id_proof_filename,
-            data.get('driver_option', 'Self Drive'), data.get('coupon_code'), data.get('driver_id')
-        ))
-        
-        conn.commit(); cursor.close(); conn.close()
-        return jsonify({"message": "Car has been booked successfully"}), 201
+            # Insert Booking
+            cursor.execute("""
+                INSERT INTO bookings (
+                    user_name, car_id, pickup_date, pickup_time, return_date, return_time, 
+                    location, payment_method, license_path, id_proof_path, driver_option, coupon_code, driver_id
+                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """, (
+                data['user_name'], car_id, data['pickup_date'], data.get('pickup_time', '09:00:00'),
+                data['return_date'], data.get('return_time', '18:00:00'), data['location'], 
+                data.get('payment_method', 'Pay at Pickup'), license_filename, id_proof_filename,
+                data.get('driver_option', 'Self Drive'), data.get('coupon_code'), data.get('driver_id')
+            ))
+            
+            conn.commit(); cursor.close(); conn.close()
+            return jsonify({"message": "Car has been booked successfully"}), 201
+        finally:
+            lock.release()
     except Exception as e: 
         print("RENT ERROR:", str(e))
         return jsonify({"error": str(e)}), 500

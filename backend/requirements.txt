@@ -4,3 +4,4 @@ mysql-connector-python>=9.0.0
 Werkzeug>=3.0.0
 razorpay>=2.0.0
 python-dotenv>=1.0.0
+redis>=5.0.0
