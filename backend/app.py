@@ -21,7 +21,8 @@ except ImportError:
     razorpay_client = None
     RAZORPAY_KEY_ID = None
 
-app = Flask(__name__)
+FRONTEND_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+app = Flask(__name__, static_folder=FRONTEND_FOLDER, static_url_path='')
 CORS(app)
 
 # --- CONFIGURATION ---
@@ -219,6 +220,21 @@ def init_db():
         print(f"--- INIT ERROR: {e} ---")
 
 init_db()
+
+@app.route('/', methods=['GET'])
+def serve_index():
+    return send_from_directory(FRONTEND_FOLDER, 'index.html')
+
+@app.route('/<path:path>', methods=['GET'])
+def serve_frontend_files(path):
+    if path.startswith('api/'):
+        return jsonify({"error": "API route not found"}), 404
+    file_path = os.path.join(FRONTEND_FOLDER, path)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_from_directory(FRONTEND_FOLDER, path)
+    if os.path.exists(file_path + '.html'):
+        return send_from_directory(FRONTEND_FOLDER, path + '.html')
+    return send_from_directory(FRONTEND_FOLDER, 'index.html')
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
