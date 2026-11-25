@@ -5,3 +5,4 @@ Werkzeug>=3.0.0
 razorpay>=2.0.0
 python-dotenv>=1.0.0
 redis>=5.0.0
+gunicorn>=21.2.0
